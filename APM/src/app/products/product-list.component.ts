@@ -1,39 +1,54 @@
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
+import { IProduct } from "./product";
+import { ProductService } from "./product.service";
 
 @Component({
-    selector: "pm-products",
-    templateUrl: "./product-list.component.html"
+    templateUrl: "./product-list.component.html",
+    styleUrls:["./product-list.component.css"]
 })
 
-export class ProductListComponent{
+export class ProductListComponent implements OnInit{
     pageTitle: string = "Product List";
     imageWidth: number = 100;
     imageMArgin: number = 2;
     showImage: boolean = false;
-    listFilter: string = "";
-    products: any[] = [
-        {
-            "productId": 2,
-            "productName": "Wedges",
-            "productCode": "HTS-397",
-            "releaseDate": "April 20, 1999",
-            "description": "Super cute shoes!",
-            "price": 21.33,
-            "starRating": 5,
-            "imageUrl": "https://ae01.alicdn.com/kf/HTB15C2hNpXXXXa9aXXXq6xXFXXXe/11cm-women-Elegant-heels-wedges-shoes-for-women-wedges-pearls-tassel-chain-platform-wedges-shoes-white.jpg"
-        },
-        {
-            "productId": 3,
-            "productName": "Stilettos",
-            "productCode": "OWK-666",
-            "releaseDate": "December 25, 2018",
-            "description": "Super adorable shoes!",
-            "price": 30.66,
-            "starRating": 5,
-            "imageUrl": "https://5.imimg.com/data5/PI/AN/MY-48738153/stilettos-500x500.jpg"
-        },
-    ];
+    errorMessage: string;
+    
+    _listFilter: string;
+    get listFilter(): string{
+        return this._listFilter;
+    }
+    set listFilter(value:string){
+        this._listFilter = value;
+        this.filteredProducts = this.listFilter ? this.performFilter(this.listFilter) : this.products;
+    }
+
+    filteredProducts: IProduct[];
+    products: IProduct[] = [];
+    //alternativly, constructor(private _productService: ProductService)
+    constructor(private _productService: ProductService){
+        this.listFilter = "";
+    }
+    performFilter(filterBy: string): IProduct[]{
+        filterBy = filterBy.toLocaleLowerCase();
+        return this.products.filter((product: IProduct) =>
+                product.productName.toLocaleLowerCase().indexOf(filterBy) != -1);
+    }
     toggleImage():void{
         this.showImage = !this.showImage;
+    }
+    ngOnInit(): void {
+        console.log("Hello World!");
+        this._productService.getProducts()
+            .subscribe(
+                products => {
+                    this.products = products
+                    this.filteredProducts = this.products;
+                },
+                error => this.errorMessage = <any>error
+            );
+    }
+    onRatingClicked(message: string): void{
+        this.pageTitle = "Product Clicked: "+ message;
     }
 }
